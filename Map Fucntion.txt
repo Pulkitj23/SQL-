@@ -1,0 +1,32 @@
+CREATE TABLE consumer_usrs.Provider_Repeat_Caller_Month_Repeat_Detail_7 STORED AS ORC AS
+SELECT D.*,
+      C.first_rsn,
+C.secnd_rsn,
+C.third_rsn,
+C.fourth_rsn,
+C.fifth_rsn,
+C.sixth_rsn
+FROM consumer_usrs.Provider_Repeat_Caller_Month_Repeat_Detail_6 D
+LEFT JOIN ( SELECT b.prov_membr_unique_id,
+CONCAT_WS('',b.first_rsn) AS first_rsn,
+CONCAT_WS('',b.secnd_rsn) AS secnd_rsn,
+CONCAT_WS('',b.third_rsn) AS third_rsn,
+CONCAT_WS('',b.fourth_rsn) AS fourth_rsn,
+CONCAT_WS('',b.fifth_rsn) AS fifth_rsn,
+CONCAT_WS('',b.sixth_rsn) AS sixth_rsn
+FROM (SELECT prov_membr_unique_id,
+   COLLECT_LIST(DISTINCT a.group_map[1]) AS first_rsn,
+   COLLECT_LIST(DISTINCT a.group_map[2]) AS secnd_rsn,
+   COLLECT_LIST(DISTINCT a.group_map[3]) AS third_rsn,
+   COLLECT_LIST(DISTINCT a.group_map[4]) AS fourth_rsn,
+   COLLECT_LIST(DISTINCT a.group_map[5]) AS fifth_rsn,
+   COLLECT_LIST(DISTINCT a.group_map[6]) AS sixth_rsn
+   FROM (
+SELECT  prov_membr_unique_id,MAP(denserank_ors,rsn_txt) AS group_map
+FROM consumer_usrs.Provider_Repeat_Caller_Month_Repeat_Detail_6 
+WHERE MAX_RANK_ORS<=6
+  )a
+GROUP BY a.prov_membr_unique_id	  
+)b
+)C
+ON D.prov_membr_unique_id=C.prov_membr_unique_id;
